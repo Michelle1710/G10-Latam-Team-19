@@ -78,6 +78,8 @@ class Clasificacion(BaseModel):
 class Paciente(BaseModel):
     nombre: str
     edad: Optional[int] = Field(None, ge=0, le=130)
+    sexo: Optional[str] = Field(None, pattern=r"^(M|F)$")
+    ID_paciente: Optional[str] = Field(None, pattern=str(r"^[A-Z0-9]{6,12}$"), description="ID único del paciente, ej: ABC123456")
 
 class MedicoSolicitante(BaseModel):
     nombre: str
@@ -93,8 +95,14 @@ class DatosExtraidos(BaseModel):
         pattern=r"^[A-Z][0-9]{2}(\.[0-9A-Z]{1,4})?$",
         description="Código CIE-10, ej: I26.9"
     )
-    medicamentos: Optional[list[str]] = None
-    dosis: Optional[list[str]] = None
+    medicamentos: Optional[list[MedicamentoPrescrito]] = None
+
+    signos_vitales: Optional[SignosVitales] = None
+
+class MedicamentoPrescrito(BaseModel):
+    nombre: str
+    dosis: Optional[str] = None
+    frecuencia_diaria: Optional[str] = None
 
 class NotificacionGenerada(BaseModel):
     canal: str = Field(..., examples=["Alerta_Guardia_Medica"])
@@ -111,6 +119,30 @@ class AlmacenamientoOCI(BaseModel):
     ruta_objeto: str
     status_backup: str = Field(default="pendiente")
 
+class SignosVitales(BaseModel):
+    temperatura: Optional[float] = Field(
+        None, 
+        description="Temperatura corporal en grados Celsius, ej: 39.5"
+    )
+    frecuencia_cardiaca: Optional[int] = Field(
+        None, 
+        description="Latidos por minuto (lpm), ej: 110"
+    )
+    frecuencia_respiratoria: Optional[int] = Field(
+        None, 
+        description="Respiraciones por minuto (rpm), ej: 24"
+    )
+    presion_arterial: Optional[str] = Field(
+        None, 
+        pattern=r"^\d{2,3}\/\d{2,3}$",
+        description="Presión arterial sistólica/diastólica, ej: '120/80'"
+    )
+    saturacion_oxigeno: Optional[int] = Field(
+        None, 
+        ge=0, le=100,
+        description="Saturación de oxígeno (SpO2) en porcentaje, ej: 95"
+    )
+
 
 # --------------------
 # Response: lo que devuelve el endpoint (y lo que persiste el agente)
@@ -124,6 +156,7 @@ class TriageResponse(BaseModel):
     datos_extraidos: DatosExtraidos
     decision_enrutamiento: DecisionEnrutamiento
     almacenamiento_oci: Optional[AlmacenamientoOCI] = None
+    canal_origen: str
 
 
 # --------------------
