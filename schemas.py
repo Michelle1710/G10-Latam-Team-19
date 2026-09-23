@@ -65,8 +65,12 @@ class DocumentoClinicoRequest(BaseModel):
             raise ValueError("documento_texto no puede estar vacío")
         return v
 
+
 # --------------------
 # Sub-modelos de la respuesta
+# --------------------
+# Ordenados de "más simple" a "más compuesto" para que cada clase
+# solo dependa de clases ya definidas arriba (más fácil de leer/mantener).
 # --------------------
 
 class Clasificacion(BaseModel):
@@ -75,15 +79,53 @@ class Clasificacion(BaseModel):
     nivel_prioridad: NivelPrioridad
     score_confianza_clasificacion: float = Field(..., ge=0.0, le=1.0)
 
+
 class Paciente(BaseModel):
     nombre: str
     edad: Optional[int] = Field(None, ge=0, le=130)
     sexo: Optional[str] = Field(None, pattern=r"^(M|F)$")
-    ID_paciente: Optional[str] = Field(None, pattern=str(r"^[A-Z0-9]{6,12}$"), description="ID único del paciente, ej: ABC123456")
+    documento_identidad: Optional[str] = Field(
+        None,
+        pattern=r"^[A-Z0-9]{6,12}$",
+        description="Documento de identidad del paciente (DNI, cédula, pasaporte), ej: ABC123456",
+    )
+
 
 class MedicoSolicitante(BaseModel):
     nombre: str
     matricula: Optional[str] = None
+
+
+class MedicamentoPrescrito(BaseModel):
+    nombre: str
+    dosis: Optional[str] = None
+    frecuencia_diaria: Optional[str] = None
+
+
+class SignosVitales(BaseModel):
+    temperatura: Optional[float] = Field(
+        None,
+        description="Temperatura corporal en grados Celsius, ej: 39.5",
+    )
+    frecuencia_cardiaca: Optional[int] = Field(
+        None,
+        description="Latidos por minuto (lpm), ej: 110",
+    )
+    frecuencia_respiratoria: Optional[int] = Field(
+        None,
+        description="Respiraciones por minuto (rpm), ej: 24",
+    )
+    presion_arterial: Optional[str] = Field(
+        None,
+        pattern=r"^\d{2,3}\/\d{2,3}$",
+        description="Presión arterial sistólica/diastólica, ej: '120/80'",
+    )
+    saturacion_oxigeno: Optional[int] = Field(
+        None,
+        ge=0, le=100,
+        description="Saturación de oxígeno (SpO2) en porcentaje, ej: 95",
+    )
+
 
 class DatosExtraidos(BaseModel):
     paciente: Paciente
@@ -96,17 +138,13 @@ class DatosExtraidos(BaseModel):
         description="Código CIE-10, ej: I26.9"
     )
     medicamentos: Optional[list[MedicamentoPrescrito]] = None
-
     signos_vitales: Optional[SignosVitales] = None
 
-class MedicamentoPrescrito(BaseModel):
-    nombre: str
-    dosis: Optional[str] = None
-    frecuencia_diaria: Optional[str] = None
 
 class NotificacionGenerada(BaseModel):
     canal: str = Field(..., examples=["Alerta_Guardia_Medica"])
     mensaje: str
+
 
 class DecisionEnrutamiento(BaseModel):
     destino_principal: DestinoEnrutamiento
@@ -114,34 +152,11 @@ class DecisionEnrutamiento(BaseModel):
     justificacion_enrutamiento: str
     notificacion_generada: Optional[NotificacionGenerada] = None
 
+
 class AlmacenamientoOCI(BaseModel):
     bucket: str = Field(default="mediflow-documentos-clinicos")
     ruta_objeto: str
     status_backup: str = Field(default="pendiente")
-
-class SignosVitales(BaseModel):
-    temperatura: Optional[float] = Field(
-        None, 
-        description="Temperatura corporal en grados Celsius, ej: 39.5"
-    )
-    frecuencia_cardiaca: Optional[int] = Field(
-        None, 
-        description="Latidos por minuto (lpm), ej: 110"
-    )
-    frecuencia_respiratoria: Optional[int] = Field(
-        None, 
-        description="Respiraciones por minuto (rpm), ej: 24"
-    )
-    presion_arterial: Optional[str] = Field(
-        None, 
-        pattern=r"^\d{2,3}\/\d{2,3}$",
-        description="Presión arterial sistólica/diastólica, ej: '120/80'"
-    )
-    saturacion_oxigeno: Optional[int] = Field(
-        None, 
-        ge=0, le=100,
-        description="Saturación de oxígeno (SpO2) en porcentaje, ej: 95"
-    )
 
 
 # --------------------
@@ -179,13 +194,12 @@ if __name__ == "__main__":
                 "nombre": "Carlos Eduardo Mendes",
                 "edad": 52,
                 "sexo": "M",
-                "ID_paciente": "1234567890",
+                "documento_identidad": "1234567890"
             },
             "medico_solicitante": {"nombre": "Dra. Renata Silveira", "matricula": "145892"},
             "estudio_realizado": "Tomografia de Torax con contraste",
             "diagnostico_principal": "Tromboembolismo Pulmonar Agudo (TEP)",
             "cie10_sugerido": "I26.9",
-
             "medicamentos": [
                 {
                     "nombre": "Enoxaparina",
@@ -216,7 +230,7 @@ if __name__ == "__main__":
             "status_backup": "exito",
         },
     }
- 
+
     respuesta = TriageResponse(**ejemplo)
     print("✅ Schema válido. Ejemplo parseado correctamente:")
     print(respuesta.model_dump_json(indent=2))
