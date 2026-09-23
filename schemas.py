@@ -167,6 +167,7 @@ if __name__ == "__main__":
     ejemplo = {
         "status": "procesado",
         "documento_id": "DOC-CLIN-2026-8942",
+        "canal_origen": "Guardia_Emergencias",
         "clasificacion": {
             "tipo_documento": "Informe de Estudio",
             "especialidad": "Radiologia / Neumonologia",
@@ -174,16 +175,36 @@ if __name__ == "__main__":
             "score_confianza_clasificacion": 0.99,
         },
         "datos_extraidos": {
-            "paciente": {"nombre": "Carlos Eduardo Mendes", "edad": 52},
+            "paciente": {
+                "nombre": "Carlos Eduardo Mendes",
+                "edad": 52,
+                "sexo": "M",
+                "ID_paciente": "1234567890",
+            },
             "medico_solicitante": {"nombre": "Dra. Renata Silveira", "matricula": "145892"},
             "estudio_realizado": "Tomografia de Torax con contraste",
             "diagnostico_principal": "Tromboembolismo Pulmonar Agudo (TEP)",
             "cie10_sugerido": "I26.9",
+
+            "medicamentos": [
+                {
+                    "nombre": "Enoxaparina",
+                    "dosis": "80 mg",
+                    "frecuencia_diaria": "2 veces al día"
+                }
+            ],
+            "signos_vitales": {
+                "temperatura": 37.5,
+                "frecuencia_cardiaca": 115,
+                "frecuencia_respiratoria": 28,
+                "presion_arterial": "140/90",
+                "saturacion_oxigeno": 88
+            },
         },
         "decision_enrutamiento": {
             "destino_principal": "Cola_Emergencia_Medica",
             "requiere_auditoria_humana": False,
-            "justificacion_enrutamiento": "Hallazgo critico de alta gravedad (TEP agudo).",
+            "justificacion_enrutamiento": "Hallazgo critico de alta gravedad (TEP agudo) y desaturación (88%).",
             "notificacion_generada": {
                 "canal": "Alerta_Guardia_Medica",
                 "mensaje": "ALERTA URGENTE: TEP Agudo para Carlos Eduardo Mendes.",
