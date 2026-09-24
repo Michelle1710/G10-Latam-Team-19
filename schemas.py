@@ -121,7 +121,7 @@ class SignosVitales(BaseModel):
     frecuencia_cardiaca: Optional[int] = Field(
         None,
         ge=0, le=200,
-        description="Latidos por minuto (lpm) - Límite OMS, ej: 110",
+        description="Latidos por minuto (lpm) - Límite, ej: 110",
     )
     frecuencia_respiratoria: Optional[int] = Field(
         None,
@@ -246,5 +246,5 @@ if __name__ == "__main__":
     }
 
     respuesta = TriageResponse(**ejemplo)
-    print("✅ Schema válido. Ejemplo parseado correctamente con los limites OMS y validación pediátrica:")
+    print("✅ Schema válido y ejemplo de respuesta generado correctamente.")
     print(respuesta.model_dump_json(indent=2))
